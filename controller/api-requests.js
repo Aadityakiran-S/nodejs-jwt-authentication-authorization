@@ -1,5 +1,8 @@
 const userSchema = require('../models/models.js');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const jwtHelper = require('../helpers/jwt-helper.js');
+require('dotenv').config();
 
 const signUpUser = async (req, res) => {
     let { username: givenUsername, password: givenPswd, email: givenEmail } = req.body;
@@ -27,11 +30,10 @@ const signUpUser = async (req, res) => {
             return res.status(500).json({ msg: `Password must be 8 char long, at least one each upper case and lowercase letter, one number, one special char (@$!%*?&) and nothing else` });
         }
 
-        //#TODO Encrypt password 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPswd = await bcrypt.hash(givenPswd, salt);
-        const hashedEmail = await bcrypt.hash(givenEmail, salt);
-        const encryptedUser = { username: givenUsername, password: hashedPswd, email: hashedEmail };
+        //#TOASK : I think email should be encrypted in a way that only the website admin can dcrypt it right? So that would mean that using bcrypt isn't the right way right?
+
+        const hashedPswd = encryptPassWord(givenPswd);
+        const encryptedUser = { username: givenUsername, password: hashedPswd, email: givenEmail };
 
         const newUser = await userSchema.create(encryptedUser);
         return res.status(200).json({ success: true, data: { usr: newUser } })
@@ -54,9 +56,10 @@ const loginUser = async (req, res) => {
         if (!await bcrypt.compare(givenPswd, user.password)) {
             return res.status(500).json({ msg: `Passwords don't match. Are you trynna hack?` });
         }
-        //#TODO Token generation
 
-        return res.status(200).json({ success: true, data: { user } })
+        // //#TODO Token generation
+        const ourAccessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION_DURATION });
+        return res.status(200).json({ success: true, data: { user }, accessToken: ourAccessToken });
     }
     catch (error) {
         return res.status(500).json({ msg: error.message });
@@ -72,6 +75,17 @@ const debug_getAllUsers = async (req, res) => {
     catch (error) {
         return res.status(500).json({ msg: error.message });
     }
+}
+
+const debug_getUserAuth = async (jwtHelper, req, res) => {
+    // let users;
+    // try {
+    //     users = await userSchema.find({});
+    //     let userInfo = users.filter(user => user.username == req.params);
+    //     return res.status(200).json({ data: userInfo });
+    // } catch (error) {
+    //     return res.status(500).json({ msg: error.message });
+    // }
 }
 
 const debug_deleteUser = async (req, res) => {
@@ -102,5 +116,22 @@ const isValidEmail = (email) => {
     return emailRegex.test(email);
 }
 
+const encryptPassWord = async (password) => {
+    let salt; let hashedPswd;
+    try {
+        salt = await bcrypt.genSalt(10);
+    } catch (error) {
+        console.log(error);
+        return;
+    }
+    try {
+        hashedPswd = await bcrypt.hash(password, salt);
+    } catch (error) {
+        console.log(error);
+    }
+
+    return hashedPswd;
+}
+
 //#endregion
-module.exports = { debug_getAllUsers, signUpUser, loginUser, debug_deleteUser }
+module.exports = { debug_getAllUsers, signUpUser, loginUser, debug_deleteUser, debug_getUserAuth }
