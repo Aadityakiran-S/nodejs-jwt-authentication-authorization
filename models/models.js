@@ -24,9 +24,7 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre('save', async function (next) {
     try {
-        console.log('Called before user is being saved');
-        const salt = await bcrypt.genSalt(10);
-        const hashedPswd = await bcrypt.hash(this.password, salt);
+        // console.log('Called before user is being saved');
         next(); //#TOASK: Where does this next() go? Don't we need to pass this as middleware somewhere for this to be called in the first place? 
     } catch (error) {
         next(error);
@@ -35,7 +33,7 @@ userSchema.pre('save', async function (next) {
 
 userSchema.post('save', async function (next) {
     try {
-        console.log('Called after user is saved')
+        // console.log('Called after user is saved')
     } catch (error) {
         next(error);
     }

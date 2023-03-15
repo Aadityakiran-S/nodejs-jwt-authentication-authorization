@@ -1,12 +1,13 @@
 const userSchema = require('../models/models.js');
+const bcrypt = require('bcrypt');
 
 const signUpUser = async (req, res) => {
-    let { username: givenName, password: givenPswd, email: givenEmail } = req.body;
+    let { username: givenUsername, password: givenPswd, email: givenEmail } = req.body;
     try {
         //Check if username already taken
-        const userAlreadyExisting = await userSchema.findOne({ username: givenName });
+        const userAlreadyExisting = await userSchema.findOne({ username: givenUsername });
         if (userAlreadyExisting) {
-            return res.status(500).json({ msg: `Name ${givenName} already taken. Try to be original won't ya?` });
+            return res.status(500).json({ msg: `Name ${givenUsername} already taken. Try to be original won't ya?` });
         }
 
         //Check if email is already in use
@@ -27,8 +28,12 @@ const signUpUser = async (req, res) => {
         }
 
         //#TODO Encrypt password 
+        const salt = await bcrypt.genSalt(10);
+        const hashedPswd = await bcrypt.hash(givenPswd, salt);
+        const hashedEmail = await bcrypt.hash(givenEmail, salt);
+        const encryptedUser = { username: givenUsername, password: hashedPswd, email: hashedEmail };
 
-        const newUser = await userSchema.create(req.body);
+        const newUser = await userSchema.create(encryptedUser);
         return res.status(200).json({ success: true, data: { usr: newUser } })
     }
     catch (error) {
@@ -37,19 +42,18 @@ const signUpUser = async (req, res) => {
 }
 
 const loginUser = async (req, res) => {
-    let { username: givenName, password: givenPswd } = req.body;
+    let { username: givenUsername, password: givenPswd } = req.body;
     try {
         //Check if user infact exists
-        const user = await userSchema.findOne({ username: givenName });
+        const user = await userSchema.findOne({ username: givenUsername });
         if (!user) {
-            return res.status(404).json({ msg: `User with name ${givenName} DNE` });
+            return res.status(404).json({ msg: `User with name ${givenUsername} DNE` });
         }
 
         //Check if given password matches
-        if (user.password !== givenPswd) {
+        if (!await bcrypt.compare(givenPswd, user.password)) {
             return res.status(500).json({ msg: `Passwords don't match. Are you trynna hack?` });
         }
-
         //#TODO Token generation
 
         return res.status(200).json({ success: true, data: { user } })
