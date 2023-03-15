@@ -1,6 +1,4 @@
 const credSchema = require('../models/models.js');
-const validator = require('password-validator');
-let schema = new validator();
 
 const signUpUser = async (req, res) => {
     let { username: givenName, password: givenPswd, email: givenEmail } = req.body;
@@ -11,21 +9,17 @@ const signUpUser = async (req, res) => {
             return res.status(500).json({ msg: `Name ${givenName} already taken. Try to be original won't ya?` });
         }
 
-        //#TOASK : Suppose I wanna test just this thing, how do I exit this function without giving any promise?
-        // if (!validatePassword(givenPswd)) {
-        //     return res.status(500).json({ msg: `Password must contain min 8 char, at least one special char, at least one smallcase, at least one upper case and at least one number` });
-        // }
-
-        if (schema.validate(givenPswd)) {
-            return res.status(500).json({ msg: `Password must contain min 8 char, at least one special char, at least one smallcase, at least one upper case and at least one number` });
-        }
-
-        //#TODO Check if email is valid
+        //Check if email is valid
         if (!isValidEmail(givenEmail)) {
             return res.status(500).json({ msg: `Please enter valid email` });
         }
 
-        //#TODO Encrypt password
+        //// #TOASK : Suppose I wanna test just this thing, how do I exit this function without giving any promise?
+        if (!validatePassword(givenPswd)) {
+            return res.status(500).json({ msg: `Password must be 8 char long, at least one each upper case and lowercase letter, one number, one special char (@$!%*?&) and nothing else` });
+        }
+
+        //#TODO Encrypt password 
 
         const newUser = await credSchema.create(req.body);
         return res.status(200).json({ success: true, data: { usr: newUser } })
@@ -44,6 +38,7 @@ const loginUser = async (req, res) => {
             return res.status(404).json({ msg: `User with name ${givenName} DNE` });
         }
 
+        //Check if given password matches
         if (user.password !== givenPswd) {
             return res.status(500).json({ msg: `Passwords don't match. Are you trynna hack?` });
         }
@@ -69,9 +64,9 @@ const debug_getAllUsers = async (req, res) => {
 }
 
 const debug_deleteUser = async (req, res) => {
-    const { username: givenName } = req.params;
+    const { id: givenID } = req.params;
     try {
-        const toBeDeletedUser = await credSchema.findOneAndDelete({ username: givenName });
+        const toBeDeletedUser = await credSchema.findOneAndDelete({ _id: givenID });
         if (!toBeDeletedUser) {
             return res.status(404).json({ msg: `User with name ${username} DNE` });
         }
@@ -86,8 +81,8 @@ const debug_deleteUser = async (req, res) => {
 //#region Helper Functions
 
 const validatePassword = (password) => {
-    //Password must be 8 char long, at least one letter, one number, one special char
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    //Password must be 8 char long, at least one each upper case and lowercase letter, one number, one special char (@$!%*?&) and nothing else
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     return passwordRegex.test(password);
 }
 
@@ -96,16 +91,5 @@ const isValidEmail = (email) => {
     return emailRegex.test(email);
 }
 
-// adding password properties
-schema
-    .is().min(8)                                    // Minimum length 8
-    .is().max(100)                                  // Maximum length 100
-    .has().uppercase()                              // Must have uppercase letters
-    .has().lowercase()                              // Must have lowercase letters
-    .has().digits(2)                                // Must have at least 2 digits
-    .has().not().spaces()                           // Should not have spaces
-    .is().not().oneOf(['Passw0rd', 'Password123']); // Blacklist these values
-
 //#endregion
-
 module.exports = { debug_getAllUsers, signUpUser, loginUser, debug_deleteUser }
