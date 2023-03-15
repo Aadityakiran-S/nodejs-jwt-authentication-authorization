@@ -1,12 +1,19 @@
-const credSchema = require('../models/models.js');
+const userSchema = require('../models/models.js');
 
 const signUpUser = async (req, res) => {
     let { username: givenName, password: givenPswd, email: givenEmail } = req.body;
     try {
         //Check if username already taken
-        const userAlreadyExisting = await credSchema.findOne({ username: givenName });
+        const userAlreadyExisting = await userSchema.findOne({ username: givenName });
         if (userAlreadyExisting) {
             return res.status(500).json({ msg: `Name ${givenName} already taken. Try to be original won't ya?` });
+        }
+
+        //Check if email is already in use
+        const emailAlreadyExisting = await userSchema.findOne({ email: givenEmail });
+        if (emailAlreadyExisting) {
+            console.log(emailAlreadyExisting);
+            return res.status(500).json({ msg: `emailID ${givenEmail} already in use. Don't steal from a brother` });
         }
 
         //Check if email is valid
@@ -21,7 +28,7 @@ const signUpUser = async (req, res) => {
 
         //#TODO Encrypt password 
 
-        const newUser = await credSchema.create(req.body);
+        const newUser = await userSchema.create(req.body);
         return res.status(200).json({ success: true, data: { usr: newUser } })
     }
     catch (error) {
@@ -33,7 +40,7 @@ const loginUser = async (req, res) => {
     let { username: givenName, password: givenPswd } = req.body;
     try {
         //Check if user infact exists
-        const user = await credSchema.findOne({ username: givenName });
+        const user = await userSchema.findOne({ username: givenName });
         if (!user) {
             return res.status(404).json({ msg: `User with name ${givenName} DNE` });
         }
@@ -55,7 +62,7 @@ const loginUser = async (req, res) => {
 //#region Debug functions
 const debug_getAllUsers = async (req, res) => {
     try {
-        let users = await credSchema.find({});
+        let users = await userSchema.find({});
         return res.status(200).json({ success: true, data: { usrs: users }, count: users.length });
     }
     catch (error) {
@@ -66,7 +73,7 @@ const debug_getAllUsers = async (req, res) => {
 const debug_deleteUser = async (req, res) => {
     const { id: givenID } = req.params;
     try {
-        const toBeDeletedUser = await credSchema.findOneAndDelete({ _id: givenID });
+        const toBeDeletedUser = await userSchema.findOneAndDelete({ _id: givenID });
         if (!toBeDeletedUser) {
             return res.status(404).json({ msg: `User with name ${username} DNE` });
         }
