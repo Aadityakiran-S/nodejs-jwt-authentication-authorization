@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const generateAccessToken = (user) => {
     const tokenUser = { username: user.username, hash: user.password, email: user.email };
-    const ourAccessToken = jwt.sign(tokenUser, process.env.ACCESS_TOKEN_SECRET);
+    const ourAccessToken = jwt.sign(tokenUser, process.env.ACCESS_TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION_DURATION });
     return ourAccessToken;
 }
 
@@ -14,14 +14,16 @@ const verifyAccessToken = (req, res, next) => {
     if (token == null) {
         res.status(401).json({ msg: "Where's your token? Boy!" });
     }
-
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if (err) {
-            res.status(403).json({ msg: "Your token is invalid. Stop trynna hack!" });
+    try {
+        const decryptUser = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        if (decryptUser.username !== req.params.id) {
+            return res.status(403).json({ msg: `You are using ${decryptUser.username}'s token. How dare you?` });
         }
-        req.user = user;
-        next();
-    })
+        req.user = decryptUser;
+        next(); //#TOASK : How to pass this as parameter in next() is that required? 
+    } catch (error) {
+        return res.status(403).json({ msg: "Your token is invalid. Stop trynna hack!" });
+    }
 }
 
 module.exports = { verifyAccessToken, generateAccessToken };

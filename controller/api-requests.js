@@ -28,7 +28,6 @@ const signUpUser = async (req, res) => {
             return res.status(500).json({ msg: `Please enter valid email` });
         }
 
-        //// #TOASK : Suppose I wanna test just this thing, how do I exit this function without giving any promise?
         if (!isValidPassword(givenPswd)) {
             return res.status(500).json({ msg: `Password must be 8 char long, at least one each upper case and lowercase letter, one number, one special char (@$!%*?&) and nothing else` });
         }
@@ -79,27 +78,10 @@ const debug_getAllUsers = async (req, res) => {
 }
 
 const debug_getUserAuth = async (req, res) => {
-    const authHeader = req.headers['authorization'];
-    const authToken = authHeader && authHeader.split(' ')[1]; //If auth header exists, just return the header otherwise return undefined
-    if (authToken == null) {
-        return res.status(401).json({ msg: "Where's your token? Boy!" });
-    }
-
-    //#TOASK : There's an async way of doing this and also a sync way, waht gives? 
     try {
-        const decryptUser = jwt.verify(authToken, process.env.ACCESS_TOKEN_SECRET);
-        if (decryptUser.username !== req.params.id) {
-            return res.status(403).json({ msg: `You are using ${decryptUser.username}'s token. How dare you?` });
-        }
-    } catch (error) {
-        return res.status(403).json({ msg: "Your token is invalid. Stop trynna hack!" });
-    }
-
-    //I'm able to login as aadityakiran and also as alan.josy why? 
-    try {
-        let users = await userSchema.find({});
-        let userInfo = users.filter((entry) => entry.username === req.params.id);
-        res.status(200).json({ data: userInfo });
+        let user = await userSchema.findOne({ username: req.params.id });
+        // let userInfo = users.filter((entry) => entry.username === req.params.id);
+        res.status(200).json({ data: user });
     } catch (error) {
         res.status(500).json({ msg: error.message });
     }
