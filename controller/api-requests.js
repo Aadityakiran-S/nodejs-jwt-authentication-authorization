@@ -1,4 +1,4 @@
-const { generateAccessToken, verifyAccessToken } = require('../helpers/jwt-helper.js');
+const { generateAccessToken } = require('../helpers/jwt-helper.js');
 const userSchema = require('../models/models.js');
 const { isValidPassword, isValidEmail, encryptPassWord } = require('../helpers/general-helper.js');
 
@@ -38,7 +38,7 @@ const signUpUser = async (req, res) => {
         const hashedPswd = await encryptPassWord(givenPswd);
         const encryptedUser = { username: givenUsername, password: hashedPswd, email: givenEmail };
         const newUser = await userSchema.create(encryptedUser);
-        return res.status(200).json({ success: true, data: { usr: newUser } })
+        return res.status(200).json({ success: true, data: { usr: newUser }, accessToken: generateAccessToken({ username: givenUsername }) })
     }
     catch (error) {
         return res.status(500).json({ msg: error.message });
@@ -59,7 +59,7 @@ const loginUser = async (req, res) => {
             return res.status(500).json({ msg: `Passwords don't match. Are you trynna hack?` });
         }
 
-        return res.status(200).json({ success: true, data: { user }, accessToken: generateAccessToken(user) });
+        return res.status(200).json({ success: true, data: { user }, accessToken: generateAccessToken({ username: givenUsername }) });
     }
     catch (error) {
         return res.status(500).json({ msg: error.message });
