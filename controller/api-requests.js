@@ -78,8 +78,9 @@ const debug_getAllUsers = async (req, res) => {
 }
 
 const debug_getUserAuth = async (req, res) => {
+    let { id: tokenID } = req.params;
     try {
-        let user = await userSchema.findOne({ username: req.params.id });
+        let user = await userSchema.findOne({ username: tokenID });
         // let userInfo = users.filter((entry) => entry.username === req.params.id);
         res.status(200).json({ data: user });
     } catch (error) {
