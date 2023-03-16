@@ -17,4 +17,10 @@ const authenticate = async (req, res, next) => {
     })
 }
 
-module.exports = authenticate;
+const generateAccessToken = (user) => {
+    const tokenUser = { username: user.username, hash: user.password, email: user.email };
+    const ourAccessToken = jwt.sign(tokenUser, process.env.ACCESS_TOKEN_SECRET);
+    return ourAccessToken;
+}
+
+module.exports = { authenticate, generateAccessToken };

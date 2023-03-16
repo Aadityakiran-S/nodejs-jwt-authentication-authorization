@@ -1,7 +1,9 @@
+const { generateAccessToken } = require('../helpers/jwt-helper.js');
 const userSchema = require('../models/models.js');
+const { isValidPassword, isValidEmail, encryptPassWord } = require('../helpers/general-helper.js');
+
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const jwtHelper = require('../helpers/jwt-helper.js');
+
 require('dotenv').config();
 
 const signUpUser = async (req, res) => {
@@ -26,15 +28,15 @@ const signUpUser = async (req, res) => {
         }
 
         //// #TOASK : Suppose I wanna test just this thing, how do I exit this function without giving any promise?
-        if (!validatePassword(givenPswd)) {
+        if (!isValidPassword(givenPswd)) {
             return res.status(500).json({ msg: `Password must be 8 char long, at least one each upper case and lowercase letter, one number, one special char (@$!%*?&) and nothing else` });
         }
 
         //#TOASK : I think email should be encrypted in a way that only the website admin can dcrypt it right? So that would mean that using bcrypt isn't the right way right?
 
-        const hashedPswd = encryptPassWord(givenPswd);
+        //#TOASK Two promises without a trycatch. What gives? Is this legal?
+        const hashedPswd = await encryptPassWord(givenPswd);
         const encryptedUser = { username: givenUsername, password: hashedPswd, email: givenEmail };
-
         const newUser = await userSchema.create(encryptedUser);
         return res.status(200).json({ success: true, data: { usr: newUser } })
     }
@@ -57,9 +59,7 @@ const loginUser = async (req, res) => {
             return res.status(500).json({ msg: `Passwords don't match. Are you trynna hack?` });
         }
 
-        // //#TODO Token generation
-        const ourAccessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: process.env.TOKEN_EXPIRATION_DURATION });
-        return res.status(200).json({ success: true, data: { user }, accessToken: ourAccessToken });
+        return res.status(200).json({ success: true, data: { user }, accessToken: generateAccessToken(user) });
     }
     catch (error) {
         return res.status(500).json({ msg: error.message });
@@ -103,35 +103,4 @@ const debug_deleteUser = async (req, res) => {
 }
 //#endregion
 
-//#region Helper Functions
-
-const validatePassword = (password) => {
-    //Password must be 8 char long, at least one each upper case and lowercase letter, one number, one special char (@$!%*?&) and nothing else
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
-}
-
-const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
-const encryptPassWord = async (password) => {
-    let salt; let hashedPswd;
-    try {
-        salt = await bcrypt.genSalt(10);
-    } catch (error) {
-        console.log(error);
-        return;
-    }
-    try {
-        hashedPswd = await bcrypt.hash(password, salt);
-    } catch (error) {
-        console.log(error);
-    }
-
-    return hashedPswd;
-}
-
-//#endregion
 module.exports = { debug_getAllUsers, signUpUser, loginUser, debug_deleteUser, debug_getUserAuth }
