@@ -7,10 +7,8 @@ const generateAccessToken = (user) => {
     return ourAccessToken;
 }
 
+//#TOASK : How to write this as a middleware?
 const verifyAccessToken = (req, res, next) => {
-
-    console.log("Hello")
-
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; //If auth header exists, just return the header otherwise return undefined
     if (token == null) {

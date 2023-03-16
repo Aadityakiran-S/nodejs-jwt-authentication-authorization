@@ -3,6 +3,7 @@ const userSchema = require('../models/models.js');
 const { isValidPassword, isValidEmail, encryptPassWord } = require('../helpers/general-helper.js');
 
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 require('dotenv').config();
 
@@ -78,12 +79,23 @@ const debug_getAllUsers = async (req, res) => {
 }
 
 const debug_getUserAuth = async (req, res) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; //If auth header exists, just return the header otherwise return undefined
+    // if (token == null) {
+    //     res.status(401).json({ msg: "Where's your token? Boy!" });
+    // }
+
+    // jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+    //     if (err) {
+    //         res.status(403).json({ msg: "Your token is invalid. Stop trynna hack!" });
+    //     }
+    // })
     try {
         let users = await userSchema.find({});
         let userInfo = users.filter((entry) => entry.username === req.params.id);
-        return res.status(200).json({ data: userInfo });
+        return res.status(200).json({ data: userInfo, token: authToken });
     } catch (error) {
-        res.status(500).json({ msg: error.message });
+        return res.status(500).json({ msg: error.message });
     }
 }
 
