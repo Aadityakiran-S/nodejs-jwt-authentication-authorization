@@ -87,11 +87,15 @@ const debug_getUserAuth = async (req, res) => {
 
     //#TOASK : There's an async way of doing this and also a sync way, waht gives? 
     try {
-        jwt.verify(authToken, process.env.ACCESS_TOKEN_SECRET);
+        const decryptUser = jwt.verify(authToken, process.env.ACCESS_TOKEN_SECRET);
+        if (decryptUser.username !== req.params.id) {
+            return res.status(403).json({ msg: `You are using ${decryptUser.username}'s token. How dare you?` });
+        }
     } catch (error) {
         return res.status(403).json({ msg: "Your token is invalid. Stop trynna hack!" });
     }
 
+    //I'm able to login as aadityakiran and also as alan.josy why? 
     try {
         let users = await userSchema.find({});
         let userInfo = users.filter((entry) => entry.username === req.params.id);
