@@ -80,20 +80,21 @@ const debug_getAllUsers = async (req, res) => {
 
 const debug_getUserAuth = async (req, res) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; //If auth header exists, just return the header otherwise return undefined
-    // if (token == null) {
-    //     res.status(401).json({ msg: "Where's your token? Boy!" });
-    // }
+    const authToken = authHeader && authHeader.split(' ')[1]; //If auth header exists, just return the header otherwise return undefined
+    if (authToken == null) {
+        res.status(401).json({ msg: "Where's your token? Boy!" });
+    }
 
-    // jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-    //     if (err) {
-    //         res.status(403).json({ msg: "Your token is invalid. Stop trynna hack!" });
-    //     }
-    // })
+    jwt.verify(authToken, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+        if (err) {
+            res.status(403).json({ msg: "Your token is invalid. Stop trynna hack!" });
+        }
+        req.user = user;
+    })
     try {
         let users = await userSchema.find({});
         let userInfo = users.filter((entry) => entry.username === req.params.id);
-        return res.status(200).json({ data: userInfo, token: authToken });
+        return res.status(200).json({ data: userInfo });
     } catch (error) {
         return res.status(500).json({ msg: error.message });
     }
