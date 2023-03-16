@@ -1,4 +1,4 @@
-const { generateAccessToken } = require('../helpers/jwt-helper.js');
+const { generateAccessToken, verifyAccessToken } = require('../helpers/jwt-helper.js');
 const userSchema = require('../models/models.js');
 const { isValidPassword, isValidEmail, encryptPassWord } = require('../helpers/general-helper.js');
 
@@ -77,15 +77,14 @@ const debug_getAllUsers = async (req, res) => {
     }
 }
 
-const debug_getUserAuth = async (jwtHelper, req, res) => {
-    // let users;
-    // try {
-    //     users = await userSchema.find({});
-    //     let userInfo = users.filter(user => user.username == req.params);
-    //     return res.status(200).json({ data: userInfo });
-    // } catch (error) {
-    //     return res.status(500).json({ msg: error.message });
-    // }
+const debug_getUserAuth = async (req, res) => {
+    try {
+        let users = await userSchema.find({});
+        let userInfo = users.filter((entry) => entry.username === req.params.id);
+        return res.status(200).json({ data: userInfo });
+    } catch (error) {
+        res.status(500).json({ msg: error.message });
+    }
 }
 
 const debug_deleteUser = async (req, res) => {

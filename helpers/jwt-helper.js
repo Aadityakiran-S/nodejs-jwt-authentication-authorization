@@ -1,7 +1,16 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-const authenticate = async (req, res, next) => {
+const generateAccessToken = (user) => {
+    const tokenUser = { username: user.username, hash: user.password, email: user.email };
+    const ourAccessToken = jwt.sign(tokenUser, process.env.ACCESS_TOKEN_SECRET);
+    return ourAccessToken;
+}
+
+const verifyAccessToken = (req, res, next) => {
+
+    console.log("Hello")
+
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; //If auth header exists, just return the header otherwise return undefined
     if (token == null) {
@@ -17,10 +26,4 @@ const authenticate = async (req, res, next) => {
     })
 }
 
-const generateAccessToken = (user) => {
-    const tokenUser = { username: user.username, hash: user.password, email: user.email };
-    const ourAccessToken = jwt.sign(tokenUser, process.env.ACCESS_TOKEN_SECRET);
-    return ourAccessToken;
-}
-
-module.exports = { authenticate, generateAccessToken };
+module.exports = { verifyAccessToken, generateAccessToken };
