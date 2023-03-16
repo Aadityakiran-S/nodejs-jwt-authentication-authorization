@@ -82,21 +82,22 @@ const debug_getUserAuth = async (req, res) => {
     const authHeader = req.headers['authorization'];
     const authToken = authHeader && authHeader.split(' ')[1]; //If auth header exists, just return the header otherwise return undefined
     if (authToken == null) {
-        res.status(401).json({ msg: "Where's your token? Boy!" });
+        return res.status(401).json({ msg: "Where's your token? Boy!" });
     }
 
-    jwt.verify(authToken, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if (err) {
-            res.status(403).json({ msg: "Your token is invalid. Stop trynna hack!" });
-        }
-        req.user = user;
-    })
+    //#TOASK : There's an async way of doing this and also a sync way, waht gives? 
+    try {
+        jwt.verify(authToken, process.env.ACCESS_TOKEN_SECRET);
+    } catch (error) {
+        return res.status(403).json({ msg: "Your token is invalid. Stop trynna hack!" });
+    }
+
     try {
         let users = await userSchema.find({});
         let userInfo = users.filter((entry) => entry.username === req.params.id);
-        return res.status(200).json({ data: userInfo });
+        res.status(200).json({ data: userInfo });
     } catch (error) {
-        return res.status(500).json({ msg: error.message });
+        res.status(500).json({ msg: error.message });
     }
 }
 
