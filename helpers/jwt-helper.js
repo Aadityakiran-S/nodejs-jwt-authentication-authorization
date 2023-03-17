@@ -17,12 +17,12 @@ const verifyAccessToken = (req, res, next) => {
     try {
         const decryptUser = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         if (decryptUser.username !== req.params.id) {
-            return res.status(403).json({ msg: `You are using ${decryptUser.username}'s token. How dare you?` });
+            return res.status(401).json({ msg: `You are using ${decryptUser.username}'s token. How dare you?` });
         }
         req.user = decryptUser;
         next(); //#TOASK : How to pass this as parameter in next() is that required? 
     } catch (error) {
-        return res.status(403).json({ msg: "Your token is invalid. Stop trynna hack!" });
+        return res.status(401).json({ msg: "Your token is invalid. Stop trynna hack!" });
     }
 }
 

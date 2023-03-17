@@ -13,23 +13,23 @@ const signUpUser = async (req, res) => {
         //Check if username already taken
         const userAlreadyExisting = await userSchema.findOne({ username: givenUsername });
         if (userAlreadyExisting) {
-            return res.status(500).json({ msg: `Name ${givenUsername} already taken. Try to be original won't ya?` });
+            return res.status(400).json({ msg: `Name ${givenUsername} already taken. Try to be original won't ya?` });
         }
 
         //Check if email is already in use
         const emailAlreadyExisting = await userSchema.findOne({ email: givenEmail });
         if (emailAlreadyExisting) {
             console.log(emailAlreadyExisting);
-            return res.status(500).json({ msg: `emailID ${givenEmail} already in use. Don't steal from a brother` });
+            return res.status(400).json({ msg: `emailID ${givenEmail} already in use. Don't steal from a brother` });
         }
 
         //Check if email is valid
         if (!isValidEmail(givenEmail)) {
-            return res.status(500).json({ msg: `Please enter valid email` });
+            return res.status(400).json({ msg: `Please enter valid email` });
         }
 
         if (!isValidPassword(givenPswd)) {
-            return res.status(500).json({ msg: `Password must be 8 char long, at least one each upper case and lowercase letter, one number, one special char (@$!%*?&) and nothing else` });
+            return res.status(400).json({ msg: `Password must be 8 char long, at least one each upper case and lowercase letter, one number, one special char (@$!%*?&) and nothing else` });
         }
 
         //#TOASK : I think email should be encrypted in a way that only the website admin can dcrypt it right? So that would mean that using bcrypt isn't the right way right?
@@ -38,7 +38,7 @@ const signUpUser = async (req, res) => {
         const hashedPswd = await encryptPassWord(givenPswd);
         const encryptedUser = { username: givenUsername, password: hashedPswd, email: givenEmail };
         const newUser = await userSchema.create(encryptedUser);
-        return res.status(200).json({ success: true, data: { usr: newUser }, accessToken: generateAccessToken({ username: givenUsername }) })
+        return res.status(201).json({ success: true, data: { usr: newUser }, accessToken: generateAccessToken({ username: givenUsername }) })
     }
     catch (error) {
         return res.status(500).json({ msg: error.message });
@@ -56,7 +56,7 @@ const loginUser = async (req, res) => {
 
         //Check if given password matches
         if (!await bcrypt.compare(givenPswd, user.password)) {
-            return res.status(500).json({ msg: `Passwords don't match. Are you trynna hack?` });
+            return res.status(401).json({ msg: `Passwords don't match. Are you trynna hack?` });
         }
 
         return res.status(200).json({ success: true, data: { user }, accessToken: generateAccessToken({ username: givenUsername }) });
@@ -78,10 +78,9 @@ const debug_getAllUsers = async (req, res) => {
 }
 
 const debug_getUserAuth = async (req, res) => {
-    let { id: tokenID } = req.params;
+    let { id: givenUsername } = req.params;
     try {
-        let user = await userSchema.findOne({ username: tokenID });
-        // let userInfo = users.filter((entry) => entry.username === req.params.id);
+        let user = await userSchema.findOne({ username: givenUsername });
         res.status(200).json({ data: user });
     } catch (error) {
         res.status(500).json({ msg: error.message });
