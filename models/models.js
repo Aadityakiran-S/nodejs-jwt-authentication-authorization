@@ -1,7 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-
-//#TOASK: What's the difference between npm install and npm install --save ? Why would we use one over the other?
 
 const userSchema = new mongoose.Schema({
     username: {
@@ -39,4 +36,4 @@ userSchema.post('save', async function (next) {
     }
 })
 
-module.exports = mongoose.model('Credentials', userSchema);
+module.exports = mongoose.model('credentials', userSchema, 'credentials');
