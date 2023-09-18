@@ -13,6 +13,8 @@ const verifyAccessToken = (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1]; //If auth header exists, just return the header otherwise return undefined
     if (token == null) {
         res.status(401).json({ msg: "Where's your token? Boy!" });
+        const err = new Error("Where's your token? Boy!"); err.status = 401;
+        next(err);
     }
     try {
         const decryptUser = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -22,7 +24,9 @@ const verifyAccessToken = (req, res, next) => {
         req.user = decryptUser;
         next(); //#TOASK : How to pass this as parameter in next() is that required? 
     } catch (error) {
-        return res.status(401).json({ msg: "Your token is invalid. Stop trynna hack!" });
+        res.status(401).json({ msg: "Your token is invalid. Stop trynna hack!" });
+        const err = new Error("Your token is invalid. Stop trynna hack!"); err.status = 401;
+        next(err);
     }
 }
 
