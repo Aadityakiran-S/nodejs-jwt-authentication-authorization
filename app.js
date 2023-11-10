@@ -3,10 +3,14 @@ const app = express();
 const routes = require('./routes/router.js');
 const connectDB = require('./db/connect.js');
 const { urlencoded } = require('express');
+const { errorHandlingMiddleware } = require('./helpers/error-handling-helper.js');
 require('dotenv').config();
 
-//using the json parser
+//using the json parser middleware
 app.use(express.json());
+
+//Allowing middleware for error handling (custom)
+app.use(errorHandlingMiddleware);
 
 //Setting up routes
 app.use('/api/v1/users', routes);
