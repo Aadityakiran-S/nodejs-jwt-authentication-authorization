@@ -15,11 +15,6 @@ const encryptPassWord = async (password) => {
     let salt; let hashedPswd;
     try {
         salt = await bcrypt.genSalt(10);
-    } catch (error) {
-        console.log(error);
-        return;
-    }
-    try {
         hashedPswd = await bcrypt.hash(password, salt);
     } catch (error) {
         console.log(error);
